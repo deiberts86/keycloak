@@ -1,0 +1,47 @@
+image:
+  registry: registry1.dso.mil
+  repository: ironbank/opensource/postgres/postgresql12
+  tag: 12.15
+  digest: "" #Optional
+  pullSecrets:
+  - $YOUR-IRONBANK-SECRET-(USER/PASS Registry Secret)
+  pullPolicy: Always
+  debug: false
+
+containerPorts:
+  postgresql: 5432
+
+auth:
+  enablePostgresUser: true
+  postgresPassword: ""
+  username: ""
+  password: ""
+  database: "keycloak"
+  replicationUsername: repl_user
+  replicationPassword: ""
+  existingSecret: ""
+  # secretKeys:
+  #   adminPasswordKey: postgres-password
+  #   userPasswordKey: password
+  #   replicationPasswordKey: replication-password
+
+# architecture: standalone
+# replication:
+#   replication.synchronousCommit: "off"
+#   replication.numSynchronousReplicas: 0
+#   replication.applicationName: my_application
+# ldap:
+#   enabled: false
+#   server: ""
+#   port: ""
+#   prefix: ""
+#   suffix: ""
+#   basedn: ""
+#   binddn: ""
+#   bindpw: ""
+#   searchAttribute: ""
+#   searchFilter: ""
+#   scheme: ""
+#   tls:
+#     enabled: false
+#   uri: ""
