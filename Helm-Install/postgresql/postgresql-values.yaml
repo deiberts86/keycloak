@@ -1,10 +1,12 @@
+global:
+  storageClass: "longhorn"
+
 image:
-  registry: registry1.dso.mil
-  repository: ironbank/opensource/postgres/postgresql12
-  tag: 12.15
-  digest: "" #Optional
-  pullSecrets:
-  - $YOUR-IRONBANK-SECRET-(USER/PASS Registry Secret)
+  registry: docker.io
+  repository: bitnami/postgresql
+  tag: 16.0.0-debian-11-r13
+#  pullSecrets:
+#  - ironbank-secret
   pullPolicy: Always
   debug: false
 
@@ -13,17 +15,33 @@ containerPorts:
 
 auth:
   enablePostgresUser: true
-  postgresPassword: ""
-  username: ""
-  password: ""
+  #postgresPassword: ""
+  username: "postgres"
+  #password: ""
   database: "keycloak"
   replicationUsername: repl_user
-  replicationPassword: ""
-  existingSecret: ""
-  # secretKeys:
-  #   adminPasswordKey: postgres-password
-  #   userPasswordKey: password
-  #   replicationPasswordKey: replication-password
+  #replicationPassword: ""
+  existingSecret: "postgres-credentials"
+  secretKeys:
+    adminPasswordKey: "POSTGRES_PASSWORD"
+    userPasswordKey: "pgUserPassword"
+    replicationPasswordKey: "replicationPassword"
+
+primary:
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 0
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop:
+        - ALL
 
 # architecture: standalone
 # replication:
