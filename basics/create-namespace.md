@@ -3,6 +3,7 @@
 References:
 - [(PSA) Pod Security Admission](https://kubernetes.io/docs/tutorials/security/ns-level-pss/)
 - [(PSS) Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/)
+- [With AppArmor Annotations (debian-systems)](https://kubernetes.io/docs/tutorials/security/apparmor/)
 
 * Example:
 
