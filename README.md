@@ -6,7 +6,10 @@ Keycloak for Kubernetes
 ### Prerequisites
 - helm
 - kubectl
-- kubernetes cluster
+- 1.25.x or higher kubernetes cluster
+- [create your namespace with PSA](/basics/create-namespace.md)
+- Optional: Create a secret towards the repository you want to pull from
+  - Instructions found here: [create secret](/basics/create-secret.md)
 
 ### Install PostgreSQL or Connect to Existing Database (DBA Controlled)
 [Install PostgreSQL with Helm](/Helm-Install/postgresql-install.md)
