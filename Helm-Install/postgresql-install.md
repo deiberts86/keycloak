@@ -18,6 +18,5 @@ REPMGR_PASSWORD=$(openssl rand -hex 16 | base64 | tr -d '\n')
 PGPOOL_ADMIN_PASSWORD=$(openssl rand -hex 16 | base64 | tr -d '\n')
 
 kubectl -n keycloak create secret generic postgresql-secret --from-literal=password=$POSTGRES_PASSWORD --from-literal=repmgr-password=$REPMGR_PASSWORD --from-literal=admin-password=$PGPOOL_ADMIN_PASSWORD
-EOF
 ```
 MORE TO COME
