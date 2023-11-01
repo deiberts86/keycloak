@@ -50,7 +50,7 @@ securityContext:
 # Additional environment variables for Keycloak
 extraEnv: |-
   - name: KC_HOSTNAME
-    value: "keycloak-keycloakx-http"
+    value: "kube-keycloak"
   - name: KC_HOSTNAME_STRICT
     value: "true"
   - name: KC_HOSTNAME_STRICT_HTTPS
@@ -61,6 +61,8 @@ extraEnv: |-
     value: "admin"
   - name: KEYCLOAK_ADMIN_PASSWORD
     value: "password12345"
+  - name: KC_LOG_LEVEL
+    value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
 # - name: KC_CACHE_STACK
 #   value: kubernetes
 
@@ -178,15 +180,15 @@ database:
   # don't create secret for db password. Instead use existing k8s secret
   # existingSecret: "my-existent-dbpass-secret"
   # existingSecretKey: "password"
-  existingSecret: "postgres-credentials"
-  existingSecretKey: "POSTGRES_PASSWORD"
+  existingSecret: "postgresql-secret"
+  existingSecretKey: "password"
   # E.g. dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
   vendor: postgres
   hostname: "postgresql.keycloak.svc.cluster.local"
   port: 5432
-  database: keycloak
+  database: postgres
   username: postgres
-  password: ""
+  password: null
 
 cache:
   # Use "custom" to disable automatic cache configuration
@@ -298,37 +300,37 @@ test:
   deletionPolicy: before-hook-creation
 #
 ingress:
-  enabled: true
-  ingressClassName: "nginx"
-  servicePort: http
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-buffer-size: 128k
-    cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-  labels: {}
-  rules:
-    - host: "keycloak.10-7-2-141.sslip.io"
-      paths:
-        - path: "/"
-          pathType: Prefix
-  tls:
-    - hosts:
-        - "keycloak.10-7-2-141.sslip.io"
-      secretName: "keycloak-tls-secret"
-  console:
-    enabled: true
-    ingressClassName: "nginx"
-    annotations:
-      cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
-      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    rules:
-      - host: "keycloak-console.10-7-2-141.sslip.io"
-        paths:
-          - path: "/auth/admin"
-            pathType: Prefix
-    tls:
-     - hosts:
-         - keycloak-console.10-7-2-141.sslip.io
-       secretName: "keycloak-console-tls-secret"
+  enabled: false
+#   ingressClassName: "nginx"
+#   servicePort: http
+#   annotations:
+#     nginx.ingress.kubernetes.io/proxy-buffer-size: 128k
+#     cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+#     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+#     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+#   labels: {}
+#   rules:
+#     - host: "keycloak.10-7-2-180.sslip.io"
+#       paths:
+#         - path: "/"
+#           pathType: Prefix
+#   tls:
+#     - hosts:
+#         - "keycloak.10-7-2-180.sslip.io"
+#       secretName: "keycloak-tls-secret"
+#   console:
+#     enabled: true
+#     ingressClassName: "nginx"
+#     annotations:
+#       cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+#       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+#       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+#     rules:
+#       - host: "keycloak-console.10-7-2-180.sslip.io"
+#         paths:
+#           - path: "/auth/admin/master/console"
+#             pathType: Prefix
+#     tls:
+#      - hosts:
+#          - keycloak-console.10-7-2-180.sslip.io
+#        secretName: "keycloak-console-tls-secret"

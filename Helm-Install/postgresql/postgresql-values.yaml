@@ -15,17 +15,17 @@ containerPorts:
 
 auth:
   enablePostgresUser: true
-  #postgresPassword: ""
+  postgresPassword: null
   username: "postgres"
-  #password: ""
+  password: null
   database: "keycloak"
   replicationUsername: repl_user
-  #replicationPassword: ""
-  existingSecret: "postgres-credentials"
+  replicationPassword: null
+  existingSecret: "postgresql-secret"
   secretKeys:
-    adminPasswordKey: "POSTGRES_PASSWORD"
-    userPasswordKey: "pgUserPassword"
-    replicationPasswordKey: "replicationPassword"
+    adminPasswordKey: "admin-password"
+    userPasswordKey: "password"
+    replicationPasswordKey: "repmgr-password"
 
 primary:
   podSecurityContext:

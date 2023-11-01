@@ -1,0 +1,214 @@
+command:
+  - "/opt/keycloak/bin/kc.sh"
+#
+args:
+  - "start"
+#
+extraEnv: |-
+  - name: KC_HEALTH_ENABLED
+    value: "true"
+  - name: KEYCLOAK_PRODUCTION
+    value: "true"
+  - name: KC_HTTP_RELATIVE_PATH
+    value: "/auth"
+  - name: KC_PROXY
+    value: "edge"
+  - name: KC_HOSTNAME
+    value: keycloak.10-7-2-180.sslip.io
+  - name: KC_HOSTNAME_STRICT
+    value: "true"
+  - name: KC_HOSTNAME_STRICT_HTTPS
+    value: "true"
+  - name: KC_LOG_LEVEL
+    value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
+  - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
+    value: "true"
+# name: DB_USER_FILE
+# value: "/secrets/name/user"
+# name: DB_PASSWORD_FILE
+# value: "/secrets/name/password"
+# - name: DB_VENDOR
+#   value: postgres
+# - name: DB_ADDR
+#   value: "127.0.0.1"
+# - name: DB_PORT
+#   value: "5432"
+# - name: DB_DATABASE
+#   value: postgres
+# - name: DB_USER
+#   value: myuser
+# - name: DB_PASSWORD
+#   value: mypassword
+#
+# extraVolumeMounts: |
+#   - name: name
+#     mountPath: /secrets/name
+#     readOnly: true
+# extraVolumes: |
+#   - name: name
+#     secret:
+#       secretName: secret-name
+#
+replicas: 1
+#
+image:
+  repository: registry1.dso.mil/ironbank/opensource/keycloak/keycloak
+  tag: "21.1.1"
+  pullPolicy: Always
+#
+imagePullSecrets:
+- name: ironbank-secret
+#
+updateStrategy: RollingUpdate
+#
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+securityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+#
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+#
+pgchecker:
+  image:
+    # Docker image used to check Postgresql readiness at startup
+    repository: registry1.dso.mil/ironbank/opensource/postgres/postgresql12
+    # Image tag for the pgchecker image
+    tag: 12.15
+    # Image pull policy for the pgchecker image
+    pullPolicy: Always
+  # SecurityContext for the pgchecker container
+  securityContext:
+    allowPrivilegeEscalation: false
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+  # Resource requests and limits for the pgchecker container
+  resources:
+    requests:
+      cpu: "20m"
+      memory: "32Mi"
+    limits:
+      cpu: "20m"
+      memory: "32Mi"
+#
+autoscaling:
+  # If `true`, an autoscaling/v2beta2 HorizontalPodAutoscaler resource is created (requires Kubernetes 1.18 or above)
+  # Autoscaling seems to be most reliable when using KUBE_PING service discovery (see README for details)
+  # This disables the `replicas` field in the StatefulSet
+  enabled: false
+  # Additional HorizontalPodAutoscaler labels
+  labels: {}
+  # The minimum and maximum number of replicas for the Keycloak StatefulSet
+  minReplicas: 3
+  maxReplicas: 10
+  # The metrics to use for scaling
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+  # The scaling policy to use. This will scale up quickly but only scale down a single Pod per 5 minutes.
+  # This is important because caches are usually only replicated to 2 Pods and if one of those Pods is terminated this will give the cluster time to recover.
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 300
+#
+postgresql:
+  # If `true`, the Postgresql dependency is enabled
+  enabled: true
+  # PostgreSQL User to create
+  postgresqlUsername: keycloak
+  # PostgreSQL Password for the new user
+  postgresqlPassword: keycloak
+  # PostgreSQL Database to create
+  postgresqlDatabase: keycloak
+  # PostgreSQL network policy configuration
+  networkPolicy:
+    enabled: false
+  # Added by BigBang
+  # change bitnami sub-chart upstream image to pull from registry1.dso.mil
+  # this image is only used for dev and CI pipelines
+  global:
+    imagePullSecrets:
+      - ironbank-secret
+  image:
+    registry: registry1.dso.mil
+    repository: ironbank/opensource/postgres/postgresql12
+    tag: 12.15
+  securityContext:
+    enabled: true
+    fsGroup: 26
+    runAsUser: 1001
+    runAsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 26
+    capabilities:
+      drop:
+        - ALL
+#
+secrets:
+  env:
+    stringData:
+      # https://access.redhat.com/documentation/en-us/openjdk/11/html-single/configuring_openjdk_11_on_rhel_with_fips/index
+      JAVA_TOOL_OPTIONS: "-Dcom.redhat.fips=true"
+      # default admin credentials. Override them for production deployments
+      KEYCLOAK_ADMIN: "admin"
+      KEYCLOAK_ADMIN_PASSWORD: "password"
+#
+ingress:
+  enabled: true
+  ingressClassName: "nginx"
+  servicePort: http
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 128k
+    cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  labels:
+    app: keycloak-ingress
+  rules:
+    - host: "keycloak.10-7-2-180.sslip.io"
+      paths:
+        - path: "/auth"
+          pathType: Prefix
+  tls:
+    - hosts:
+        - "keycloak.10-7-2-180.sslip.io"
+      secretName: "keycloak-tls-secret"
+  # console:
+  #   enabled: false
+  #   ingressClassName: "nginx"
+  #   annotations:
+  #     cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+  #     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+  #     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  #   rules:
+  #     - host: "keycloak.10-7-2-180.sslip.io"
+  #       paths:
+  #         - path: "/auth/admin/"
+  #           pathType: Prefix
+  #   tls:
+  #    - hosts:
+  #        - keycloak.10-7-2-180.sslip.io
+  #      secretName: "keycloak-console-tls-secret"
