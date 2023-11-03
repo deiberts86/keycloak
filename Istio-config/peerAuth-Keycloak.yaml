@@ -1,0 +1,40 @@
+
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: keycloak-postgresql-exception
+  namespace: keycloak
+spec:
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    '5432':
+      mode: PERMISSIVE
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: ispn-ha-exception
+  namespace: keycloak
+spec:
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    '7800':
+      mode: PERMISSIVE
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default-keycloak
+  namespace: keycloak
+spec:
+  mtls:
+    mode: STRICT
