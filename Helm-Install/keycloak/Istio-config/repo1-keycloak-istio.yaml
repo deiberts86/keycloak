@@ -9,6 +9,14 @@ spec:
     istio: ingressgateway
   servers:
     - hosts:
+        - keycloak.domain.name
+      port:
+        name: http
+        number: 80
+        protocol: HTTP
+      tls:
+        httpsRedirect: true
+    - hosts:
         - keycloak.domain.com
       port:
         name: keycloak-https
