@@ -13,13 +13,13 @@ nameOverride: ""
 replicas: 1
 
 image:
-  repository: registry1.dso.mil/ironbank/opensource/keycloak/keycloak
-  tag: "21.1.1"
+  repository: quay.io/keycloak/keycloak
+  tag: "22.0.5"
   pullPolicy: Always
 
 # Image pull secrets for the Pod
 imagePullSecrets:
-- name: ironbank-secret
+- name: ""
 
 # Mapping between IPs and hostnames that will be injected as entries in the Pod's hosts files
 hostAliases: []
@@ -49,8 +49,18 @@ securityContext:
 
 # Additional environment variables for Keycloak
 extraEnv: |-
+  - name: KEYCLOAK_PRODUCTION
+    value: "true"
+  - name: KC_PROXY
+    value: "edge"
+  - name: KC_CACHE
+    value: "ispn"
+  - name: KC_CACHE_STACK
+    value: "kubernetes"
+  - name: KC_HTTP_ENABLED
+    value: "true"
   - name: KC_HOSTNAME
-    value: "kube-keycloak"
+    value: "keycloak.domain.com"
   - name: KC_HOSTNAME_STRICT
     value: "true"
   - name: KC_HOSTNAME_STRICT_HTTPS
@@ -61,10 +71,10 @@ extraEnv: |-
     value: "admin"
   - name: KEYCLOAK_ADMIN_PASSWORD
     value: "password12345"
+  - name: JAVA_OPTS_APPEND
+    value: "-Djgroups.dns.query=keycloak-headless"
   - name: KC_LOG_LEVEL
     value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
-# - name: KC_CACHE_STACK
-#   value: kubernetes
 
 # Additional environment variables for Keycloak mapped from Secret or ConfigMap
 extraEnvFrom: ""
@@ -82,10 +92,14 @@ nodeSelector: {}
 tolerations: []
 
 # Additional Pod labels
-podLabels: {}
+podLabels:
+  app: keycloakx
+  version: 22.0.5
 
 # Additional Pod annotations
-podAnnotations: {}
+podAnnotations:
+  sidecar.istio.io/rewriteAppHTTPProbers: "true"
+  proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
 
 # Liveness probe configuration
 livenessProbe: |
@@ -165,8 +179,8 @@ dbchecker:
     pullPolicy: Always
   securityContext:
     allowPrivilegeEscalation: false
-    runAsUser: 1000
-    runAsGroup: 1000
+    runAsUser: 1337
+    runAsGroup: 1337
     runAsNonRoot: true
   resources:
     requests:
@@ -180,22 +194,21 @@ database:
   # don't create secret for db password. Instead use existing k8s secret
   # existingSecret: "my-existent-dbpass-secret"
   # existingSecretKey: "password"
-  existingSecret: "postgresql-secret"
-  existingSecretKey: "password"
+  #existingSecret: "postgresql-secret"
+  #existingSecretKey: "password"
   # E.g. dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
   vendor: postgres
   hostname: "postgresql.keycloak.svc.cluster.local"
   port: 5432
   database: postgres
   username: postgres
-  password: null
+  password: postgres
 
 cache:
   # Use "custom" to disable automatic cache configuration
   stack: default
 proxy:
-  enabled: true
-  mode: edge
+  enabled: false
 metrics:
   enabled: true
 health:
@@ -310,13 +323,13 @@ ingress:
 #     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 #   labels: {}
 #   rules:
-#     - host: "keycloak.10-7-2-180.sslip.io"
+#     - host: "keycloakdomain.com"
 #       paths:
 #         - path: "/"
 #           pathType: Prefix
 #   tls:
 #     - hosts:
-#         - "keycloak.10-7-2-180.sslip.io"
+#         - "keycloakdomain.com"
 #       secretName: "keycloak-tls-secret"
 #   console:
 #     enabled: true
@@ -326,11 +339,11 @@ ingress:
 #       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
 #       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 #     rules:
-#       - host: "keycloak-console.10-7-2-180.sslip.io"
+#       - host: "keycloak-consoledomain.com"
 #         paths:
 #           - path: "/auth/admin/master/console"
 #             pathType: Prefix
 #     tls:
 #      - hosts:
-#          - keycloak-console.10-7-2-180.sslip.io
+#          - keycloak-consoledomain.com
 #        secretName: "keycloak-console-tls-secret"

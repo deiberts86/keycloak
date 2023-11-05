@@ -1,3 +1,12 @@
+# Additional Pod annotations
+podAnnotations:
+  proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
+  sidecar.istio.io/rewriteAppHTTPProbers: "true"
+# Pod Labels for Keycloak
+podLabels:
+  app: keycloak
+  version: v1
+#
 command:
   - "/opt/keycloak/bin/kc.sh"
 #
@@ -9,36 +18,48 @@ extraEnv: |-
     value: "true"
   - name: KEYCLOAK_PRODUCTION
     value: "true"
-  - name: KC_HTTP_RELATIVE_PATH
-    value: "/auth"
   - name: KC_PROXY
     value: "edge"
+  - name: KC_HTTP_RELATIVE_PATH
+    value: "/auth"
+  - name: KC_CACHE
+    value: "ispn"
+  - name: KC_CACHE_STACK
+    value: "kubernetes"
+  - name: KC_HTTP_ENABLED
+    value: "false"
   - name: KC_HOSTNAME
-    value: keycloak.10-7-2-180.sslip.io
+    value: "keycloak.domain.com"
   - name: KC_HOSTNAME_STRICT
     value: "true"
   - name: KC_HOSTNAME_STRICT_HTTPS
     value: "true"
-  - name: KC_LOG_LEVEL
-    value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
   - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
     value: "true"
-# name: DB_USER_FILE
-# value: "/secrets/name/user"
-# name: DB_PASSWORD_FILE
-# value: "/secrets/name/password"
+  - name: JAVA_OPTS_APPEND
+    value: "-Djgroups.dns.query=keycloak-headless"
+  - name: KC_LOG_LEVEL
+    value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
 # - name: DB_VENDOR
 #   value: postgres
 # - name: DB_ADDR
-#   value: "127.0.0.1"
+#   value: "postgresql.keycloak.svc.cluster.local"
 # - name: DB_PORT
 #   value: "5432"
 # - name: DB_DATABASE
 #   value: postgres
 # - name: DB_USER
-#   value: myuser
+#   value: postgres
 # - name: DB_PASSWORD
-#   value: mypassword
+#   value: postgres
+# - name: KEYCLOAK_ADMIN
+#   value: "admin"
+# - name: KEYCLOAK_ADMIN_PASSWORD
+#   value: ""
+# name: DB_USER_FILE
+# value: "/secrets/name/user"
+# name: DB_PASSWORD_FILE
+# value: "/secrets/name/password"
 #
 # extraVolumeMounts: |
 #   - name: name
@@ -57,7 +78,7 @@ image:
   pullPolicy: Always
 #
 imagePullSecrets:
-- name: ironbank-secret
+- name: registry1-secret
 #
 updateStrategy: RollingUpdate
 #
@@ -79,6 +100,11 @@ resources:
     cpu: "1"
     memory: "1Gi"
 #
+## Network policy configuration
+networkPolicy:
+  # If true, the Network policies are deployed
+  enabled: false
+
 pgchecker:
   image:
     # Docker image used to check Postgresql readiness at startup
@@ -90,8 +116,8 @@ pgchecker:
   # SecurityContext for the pgchecker container
   securityContext:
     allowPrivilegeEscalation: false
-    runAsUser: 1000
-    runAsGroup: 1000
+    runAsUser: 1337
+    runAsGroup: 1337
     runAsNonRoot: true
     capabilities:
       drop:
@@ -150,7 +176,7 @@ postgresql:
   # this image is only used for dev and CI pipelines
   global:
     imagePullSecrets:
-      - ironbank-secret
+      - registry1-secret
   image:
     registry: registry1.dso.mil
     repository: ironbank/opensource/postgres/postgresql12
@@ -174,41 +200,7 @@ secrets:
       JAVA_TOOL_OPTIONS: "-Dcom.redhat.fips=true"
       # default admin credentials. Override them for production deployments
       KEYCLOAK_ADMIN: "admin"
-      KEYCLOAK_ADMIN_PASSWORD: "password"
+      KEYCLOAK_ADMIN_PASSWORD: "password12345"
 #
 ingress:
-  enabled: true
-  ingressClassName: "nginx"
-  servicePort: http
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-buffer-size: 128k
-    cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-  labels:
-    app: keycloak-ingress
-  rules:
-    - host: "keycloak.10-7-2-180.sslip.io"
-      paths:
-        - path: "/auth"
-          pathType: Prefix
-  tls:
-    - hosts:
-        - "keycloak.10-7-2-180.sslip.io"
-      secretName: "keycloak-tls-secret"
-  # console:
-  #   enabled: false
-  #   ingressClassName: "nginx"
-  #   annotations:
-  #     cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
-  #     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-  #     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-  #   rules:
-  #     - host: "keycloak.10-7-2-180.sslip.io"
-  #       paths:
-  #         - path: "/auth/admin/"
-  #           pathType: Prefix
-  #   tls:
-  #    - hosts:
-  #        - keycloak.10-7-2-180.sslip.io
-  #      secretName: "keycloak-console-tls-secret"
+  enabled: false

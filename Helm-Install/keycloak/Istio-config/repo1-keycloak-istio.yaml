@@ -1,0 +1,101 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: keycloak-gw
+  namespace: keycloak
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - keycloak.domain.com
+      port:
+        name: keycloak-https
+        number: 443
+        protocol: HTTPS
+      tls:
+        credentialName: registry-secret-name
+        maxProtocolVersion: TLSV1_3
+        minProtocolVersion: TLSV1_2
+        mode: SIMPLE
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: keycloak-gw
+  namespace: keycloak
+spec:
+  gateways:
+    - keycloak-gw
+  hosts:
+    - keycloak.domain.com
+  http:
+    - match:
+        - uri:
+            exact: /
+      name: root-path
+      redirect:
+        uri: /auth
+    - match:
+        - uri:
+            prefix: /auth
+      name: http
+      route:
+        - destination:
+            host: keycloak-http
+            port:
+              number: 80
+          weight: 100
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  namespace: keycloak
+spec:
+  host: keycloak-http.keycloak.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_CONN
+    tls:
+      mode: ISTIO_MUTUAL
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: keycloak-postgresql-exception
+  namespace: keycloak
+spec:
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    '5432':
+      mode: PERMISSIVE
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: ispn-ha-exception
+  namespace: keycloak
+spec:
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    '7800':
+      mode: PERMISSIVE
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keycloakx
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default-keycloak
+  namespace: keycloak
+spec:
+  mtls:
+    mode: STRICT
+...

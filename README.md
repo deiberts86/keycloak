@@ -1,6 +1,8 @@
 # keycloak
 Keycloak for Kubernetes
 
+## Under Construction
+---
 ## Steps to install KeyCloak for Kubernetes
 
 ### Prerequisites
@@ -11,7 +13,7 @@ Keycloak for Kubernetes
 - Optional: Create a secret towards the repository you want to pull from
   - Instructions found here: [create secret](/basics/create-secret.md)
 
-## Install PostgreSQL or Connect to Existing Database (DBA Controlled)
+## Install PostgreSQL or Connect to Existing Database
 [Install PostgreSQL with Helm](/Helm-Install/postgresql-install.md)
 
 ## Install KeyCloak and Point to PostgreSQL Database

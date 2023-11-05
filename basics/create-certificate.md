@@ -75,9 +75,12 @@ metadata:
   namespace: keycloak
 spec:
   secretName: "$DOMAIN_NAME-cert"
+  usages:
+    - server auth
+    - client auth
   privateKey:
     rotationPolicy: Always
-  commonName: "$DOMAIN_NAME"
+  commonName: "*.$DOMAIN_NAME"
   issuerRef:
     name: domain-ca-issuer
     kind: ClusterIssuer
