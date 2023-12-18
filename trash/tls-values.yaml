@@ -1,0 +1,37 @@
+# Add additional volumes, e. g. for custom themes
+extraVolumes: |
+  - name: all-in-one
+    projected:
+      sources:
+        secret:
+          name: kc-truststore
+        secret:
+          name: keycloak-tls
+
+
+# Add additional volumes mounts, e. g. for custom themes
+extraVolumeMounts: |
+  - name: all-in-one
+    mountPath: "/opt/keycloak/conf/"
+    readOnly: true
+  
+
+secrets:
+  quarkusproperties:
+    stringData:
+       quarkus.properties: |-
+         quarkus.transaction-manager.enable-recovery=true
+extraVolumeMounts: |-
+  - mountPath: /ObjectStore
+    name: objectstore
+  - name: quarkusproperties
+    mountPath: /opt/keycloak/conf/quarkus.properties
+    subPath: quarkus.properties
+extraVolumes: |-
+  - name: objectstore
+    emptyDir:
+      sizeLimit: 100Mi
+  - name: quarkusproperties
+    secret:
+      secretName: keycloak-quarkusproperties
+      defaultMode: 0777

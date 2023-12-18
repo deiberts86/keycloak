@@ -1,3 +1,7 @@
+podLabels:
+  app: keycloak
+  version: v1
+
 command:
   - "/opt/keycloak/bin/kc.sh"
 #
@@ -25,6 +29,16 @@ extraEnv: |-
     value: "true"
   - name: KC_HOSTNAME_STRICT_HTTPS
     value: "true"
+  - name: KC_HTTPS_CERTIFICATE_FILE
+    value: "/opt/keycloak/conf/tls.crt"
+  - name: KC_HTTPS_CERTIFICATE_KEY_FILE
+    value: "/opt/keycloak/conf/tls.key"
+  - name: KC_HTTPS_TRUST_STORE_FILE
+    value: "/opt/keycloak/conf/truststore.jks"
+  - name: KC_HTTPS_TRUST_STORE_PASSWORD
+    value: "password"
+  - name: KC_HTTPS_CLIENT_AUTH
+    value: request
   - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
     value: "true"
   - name: JAVA_OPTS_APPEND

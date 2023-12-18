@@ -1,0 +1,349 @@
+command:
+  - "/opt/keycloak/bin/kc.sh"
+args:
+  - "start"
+
+# Optionally override the fully qualified name
+fullnameOverride: ""
+
+# Optionally override the name
+nameOverride: ""
+
+# The number of replicas to create (has no effect if autoscaling enabled)
+replicas: 1
+
+image:
+  repository: quay.io/keycloak/keycloak
+  tag: "22.0.5"
+  pullPolicy: Always
+
+# Image pull secrets for the Pod
+imagePullSecrets:
+- name: ""
+
+# Mapping between IPs and hostnames that will be injected as entries in the Pod's hosts files
+hostAliases: []
+# - ip: "1.2.3.4"
+#   hostnames:
+#     - "my.host.com"
+
+restartPolicy: Always
+
+serviceAccount:
+  create: true
+  allowReadPods: false
+  name: "keycloak-svc-account"
+  annotations: {}
+  labels: {}
+  imagePullSecrets: []
+  automountServiceAccountToken: true
+
+# SecurityContext for the entire Pod. Every container running in the Pod will inherit this SecurityContext. This might be relevant when other components of the environment inject additional containers into running Pods (service meshes are the most prominent example for this)
+podSecurityContext:
+  fsGroup: 1000
+
+# SecurityContext for the Keycloak container
+securityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+
+# Additional environment variables for Keycloak
+extraEnv: |-
+  - name: KEYCLOAK_PRODUCTION
+    value: "true"
+  - name: KC_PROXY
+    value: "edge"
+  - name: KC_CACHE
+    value: "ispn"
+  - name: KC_CACHE_STACK
+    value: "kubernetes"
+  - name: KC_HTTP_ENABLED
+    value: "true"
+  - name: KC_HOSTNAME
+    value: "keycloak.domain.com"
+  - name: KC_HOSTNAME_STRICT
+    value: "true"
+  - name: KC_HOSTNAME_STRICT_HTTPS
+    value: "true"
+  - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
+    value: "true"
+  - name: KEYCLOAK_ADMIN
+    value: "admin"
+  - name: KEYCLOAK_ADMIN_PASSWORD
+    value: "password12345"
+  - name: JAVA_OPTS_APPEND
+    value: "-Djgroups.dns.query=keycloak-headless"
+  - name: KC_LOG_LEVEL
+    value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
+
+# Additional environment variables for Keycloak mapped from Secret or ConfigMap
+extraEnvFrom: ""
+
+#  Pod priority class name
+priorityClassName: ""
+
+# Topology spread constraints template
+topologySpreadConstraints:
+
+# Node labels for Pod assignment
+nodeSelector: {}
+
+# Node taints to tolerate
+tolerations: []
+
+# Additional Pod labels
+podLabels:
+  app: keycloakx
+  version: 22.0.5
+
+# Additional Pod annotations
+podAnnotations:
+  sidecar.istio.io/rewriteAppHTTPProbers: "true"
+  proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
+
+# Liveness probe configuration
+livenessProbe: |
+  httpGet:
+    path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/health/live'
+    port: http
+  initialDelaySeconds: 0
+  timeoutSeconds: 5
+
+# Readiness probe configuration
+readinessProbe: |
+  httpGet:
+    path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/health/ready'
+    port: http
+  initialDelaySeconds: 10
+  timeoutSeconds: 1
+
+# Startup probe configuration
+startupProbe: |
+  httpGet:
+    path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/health'
+    port: http
+  initialDelaySeconds: 15
+  timeoutSeconds: 1
+  failureThreshold: 60
+  periodSeconds: 5
+
+# Pod resource requests and limits
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+
+# Add additional volumes, e. g. for custom themes
+extraVolumes: ""
+
+# Add additional volumes mounts, e. g. for custom themes
+extraVolumeMounts: ""
+
+# Add additional ports, e. g. for admin console or exposing JGroups ports
+extraPorts: []
+
+# Pod disruption budget
+podDisruptionBudget: {}
+#  maxUnavailable: 1
+#  minAvailable: 1
+
+# Annotations for the StatefulSet
+statefulsetAnnotations: {}
+
+# Additional labels for the StatefulSet
+statefulsetLabels: {}
+#
+service:
+  annotations: {}
+  labels: {}
+  type: ClusterIP
+  loadBalancerIP: ""
+  httpPort: 80
+  httpNodePort: null
+  httpsPort: 8443
+  httpsNodePort: null
+  extraPorts: []
+  loadBalancerSourceRanges: []
+  externalTrafficPolicy: "Cluster"
+  sessionAffinity: ""
+  sessionAffinityConfig: {}
+#
+dbchecker:
+  enabled: true
+  image:
+    repository: docker.io/busybox
+    tag: 1.32
+    pullPolicy: Always
+  securityContext:
+    allowPrivilegeEscalation: false
+    runAsUser: 1337
+    runAsGroup: 1337
+    runAsNonRoot: true
+  resources:
+    requests:
+      cpu: "20m"
+      memory: "32Mi"
+    limits:
+      cpu: "20m"
+      memory: "32Mi"
+#
+database:
+  # don't create secret for db password. Instead use existing k8s secret
+  # existingSecret: "my-existent-dbpass-secret"
+  # existingSecretKey: "password"
+  #existingSecret: "postgresql-secret"
+  #existingSecretKey: "password"
+  # E.g. dev-file, dev-mem, mariadb, mssql, mysql, oracle or postgres
+  vendor: postgres
+  hostname: "postgresql.keycloak.svc.cluster.local"
+  port: 5432
+  database: postgres
+  username: postgres
+  password: postgres
+
+cache:
+  # Use "custom" to disable automatic cache configuration
+  stack: default
+proxy:
+  enabled: false
+metrics:
+  enabled: true
+health:
+  enabled: true
+
+http:
+  # For backwards compatibility reasons we set this to the value used by previous Keycloak versions.
+  relativePath: "/auth"
+
+serviceMonitor:
+  enabled: false
+  namespace: ""
+  namespaceSelector: {}
+  annotations: {}
+  labels: {}
+  interval: 10s
+  scrapeTimeout: 10s
+  path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/metrics'
+  port: http
+
+extraServiceMonitor:
+  enabled: false
+  namespace: ""
+  namespaceSelector: {}
+  annotations: {}
+  labels: {}
+  interval: 10s
+  scrapeTimeout: 10s
+  path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/realms/master/metrics'
+  port: http
+
+prometheusRule:
+  # If `true`, a PrometheusRule resource for the prometheus-operator is created
+  enabled: false
+  # Optionally sets a target namespace in which to deploy the ServiceMonitor resource
+  namespace: ""
+  # Annotations for the PrometheusRule
+  annotations: {}
+  # Additional labels for the PrometheusRule
+  labels: {}
+  # List of rules for Prometheus
+  rules: []
+  # - alert: keycloak-IngressHigh5xxRate
+  #   annotations:
+  #     message: The percentage of 5xx errors for keycloak over the last 5 minutes is over 1%.
+  #   expr: |
+  #     (
+  #       sum(
+  #         rate(
+  #           nginx_ingress_controller_response_duration_seconds_count{exported_namespace="mynamespace",ingress="mynamespace-keycloak",status=~"5[0-9]{2}"}[1m]
+  #         )
+  #       )
+  #       /
+  #       sum(
+  #         rate(
+  #           nginx_ingress_controller_response_duration_seconds_count{exported_namespace="mynamespace",ingress="mynamespace-keycloak"}[1m]
+  #         )
+  #       )
+  #     ) * 100 > 1
+  #   for: 5m
+  #   labels:
+  #     severity: warning
+
+autoscaling:
+  enabled: false
+  labels: {}
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 300
+
+test:
+  # If `true`, test resources are created
+  enabled: false
+  image:
+    # The image for the test Pod
+    repository: docker.io/seleniarm/standalone-chromium
+    # The tag for the test Pod image
+    tag: "117.0"
+    # The image pull policy for the test Pod image
+    pullPolicy: IfNotPresent
+  # SecurityContext for the entire test Pod
+  podSecurityContext:
+    fsGroup: 1000
+  # SecurityContext for the test container
+  securityContext:
+    runAsUser: 1000
+    runAsNonRoot: true
+  # See https://helm.sh/docs/topics/charts_hooks/#hook-deletion-policies
+  deletionPolicy: before-hook-creation
+#
+ingress:
+  enabled: false
+#   ingressClassName: "nginx"
+#   servicePort: http
+#   annotations:
+#     nginx.ingress.kubernetes.io/proxy-buffer-size: 128k
+#     cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+#     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+#     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+#   labels: {}
+#   rules:
+#     - host: "keycloakdomain.com"
+#       paths:
+#         - path: "/"
+#           pathType: Prefix
+#   tls:
+#     - hosts:
+#         - "keycloakdomain.com"
+#       secretName: "keycloak-tls-secret"
+#   console:
+#     enabled: true
+#     ingressClassName: "nginx"
+#     annotations:
+#       cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
+#       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+#       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+#     rules:
+#       - host: "keycloak-consoledomain.com"
+#         paths:
+#           - path: "/auth/admin/master/console"
+#             pathType: Prefix
+#     tls:
+#      - hosts:
+#          - keycloak-consoledomain.com
+#        secretName: "keycloak-console-tls-secret"

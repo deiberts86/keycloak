@@ -120,6 +120,8 @@ extraEnv: |-
     value: "edge"
   - name: KC_CACHE
     value: "ispn"
+  - name: KC_CACHE_STACK
+    value: "kubernetes"
   - name: KC_HTTP_ENABLED
     value: "true"
   - name: KC_HOSTNAME
@@ -134,14 +136,10 @@ extraEnv: |-
     value: "admin"
   - name: KEYCLOAK_ADMIN_PASSWORD
     value: "password12345"
-  - name: KC_HTTPS_CERTIFICATE_FILE
-    value: "/opt/keycloak/conf/tls.crt"
-  - name: KC_HTTPS_CERTIFICATE_KEY_FILE
-    value: "/opt/keycloak/conf/tls.key"
-  - name: KC_HTTPS_TRUST_STORE_FILE
-    value: "/opt/keycloak/conf/truststore.jks"
-  - name: KC_HTTPS_TRUST_STORE_PASSWORD
-    value: "password"
+  - name: JAVA_OPTS_APPEND
+    value: "-Djgroups.dns.query=keycloak-headless"
+  - name: KC_LOG_LEVEL
+    value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
 
 # Additional environment variables for Keycloak mapped from Secret or ConfigMap
 extraEnvFrom: ""
@@ -228,28 +226,10 @@ resources:
     memory: "1Gi"
 
 # Add additional volumes, e. g. for custom themes
-extraVolumes: |-
-  - name: kc-truststore
-    secret:
-      secretName: kc-truststore
-  - name: keycloak-tls
-    secret:
-      secretName: keycloak-tls
+extraVolumes: ""
 
 # Add additional volumes mounts, e. g. for custom themes
-extraVolumeMounts: |-
-  - mountPath: "/opt/keycloak/conf/truststore.jks"
-    name: kc-truststore
-    subPath: truststore.jks
-    readOnly: true
-  - mountPath: "/opt/keycloak/conf/tls.crt"
-    name: keycloak-tls
-    subPath: tls.crt
-    readOnly: true
-  - mountPath: "/opt/keycloak/conf/tls.key"
-    name: keycloak-tls
-    subPath: tls.key
-    readOnly: true
+extraVolumeMounts: ""
 
 # Add additional ports, e. g. for admin console or exposing JGroups ports
 extraPorts: []
@@ -314,9 +294,9 @@ serviceHeadless:
 
 ingress:
   # If `true`, an Ingress is created
-  enabled: false
+  enabled: true
   # The name of the Ingress Class associated with this ingress
-  ingressClassName: "nginx"
+  ingressClassName: "nginx-secondary"
   # The Service port targeted by the Ingress
   servicePort: http
   # Ingress annotations
@@ -338,8 +318,38 @@ ingress:
       host: 'keycloak.10-7-2-66.sslip.io'
       # Paths for the host
       paths:
-        - path: '/auth'
+        - path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/'
           pathType: Prefix
+  # TLS configuration
+  tls:
+    - hosts:
+        - keycloak.10-7-2-66.sslip.io
+      secretName: "keycloak-tls-ingress"
+
+  # ingress for console only (/auth/admin)
+  console:
+    # If `true`, an Ingress is created for console path only
+    enabled: false
+    # The name of Ingress Class associated with the console ingress only
+    ingressClassName: "nginx-secondary"
+    # Ingress annotations for console ingress only
+    # Useful to set nginx.ingress.kubernetes.io/whitelist-source-range particularly
+    annotations:
+      cert-manager.io/cluster-issuer: test-cluster-ca-issuer
+    rules:
+      -
+        # Ingress host
+        host: 'keycloak-console.10-7-2-66.sslip.io'
+        # Paths for the host
+        paths:
+          - path: '{{ tpl .Values.http.relativePath $ | trimSuffix "/" }}/admin'
+            pathType: Prefix
+
+    # Console TLS configuration
+    tls:
+     - hosts:
+         - keycloak-console.10-7-2-66.sslip.io
+       secretName: "keycloak-console-tls-ingress"
 
 ## Network policy configuration
 # https://kubernetes.io/docs/concepts/services-networking/network-policies/
@@ -425,11 +435,11 @@ database:
 
 cache:
   # Use "custom" to disable automatic cache configuration
-  stack: kubernetes
+  stack: default
 
 proxy:
   enabled: false
-  mode: passthrough
+  mode: edge
 
 metrics:
   enabled: true

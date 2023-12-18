@@ -1,4 +1,4 @@
-# Keycloak 21.x
+# Install Keycloak with Codecentric KeycloakX Chart
 
 ```sh
 helm repo add codecentric https://codecentric.github.io/helm-charts
