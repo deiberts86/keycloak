@@ -14,6 +14,14 @@ args:
   - "start"
 #
 extraEnv: |-
+  - name: KC_HTTPS_CERTIFICATE_FILE
+    value: "/opt/keycloak/conf/tls.crt"
+  - name: KC_HTTPS_CERTIFICATE_KEY_FILE
+    value: "/opt/keycloak/conf/tls.key"
+  - name: KC_HTTPS_TRUST_STORE_FILE
+    value: "/opt/keycloak/conf/truststore.jks"
+  - name: KC_HTTPS_TRUST_STORE_PASSWORD
+    value: "password"
   - name: KC_HEALTH_ENABLED
     value: "true"
   - name: KEYCLOAK_PRODUCTION
@@ -61,14 +69,27 @@ extraEnv: |-
 # name: DB_PASSWORD_FILE
 # value: "/secrets/name/password"
 #
-# extraVolumeMounts: |
-#   - name: name
-#     mountPath: /secrets/name
-#     readOnly: true
-# extraVolumes: |
-#   - name: name
-#     secret:
-#       secretName: secret-name
+extraVolumeMounts: |-
+  - mountPath: "/opt/keycloak/conf/truststore.jks"
+    name: kc-truststore
+    subPath: truststore.jks
+    readOnly: true
+  - mountPath: "/opt/keycloak/conf/tls.crt"
+    name: istio-keycloak-tls
+    subPath: tls.crt
+    readOnly: true
+  - mountPath: "/opt/keycloak/conf/tls.key"
+    name: istio-keycloak-tls
+    subPath: tls.key
+    readOnly: true
+#
+extraVolumes: |-
+  - name: kc-truststore
+    secret:
+      secretName: kc-truststore
+  - name: istio-keycloak-tls
+    secret:
+      secretName: istio-keycloak-tls
 #
 replicas: 1
 #
@@ -201,6 +222,39 @@ secrets:
       # default admin credentials. Override them for production deployments
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "password12345"
+
+domain: keycloak.10-7-2-63.sslip.io
+istio:
+  # Toggle istio integration
+  enabled: true
+  injection: "disabled"
+  mtls:
+    # -- STRICT = Allow only mutual TLS traffic,
+    # PERMISSIVE = Allow both plain text and mutual TLS traffic
+    mode: STRICT
+  keycloak:
+    # Toggle vs creation
+    enabled: true
+    annotations: {}
+    labels: {}
+    gateways:
+      - istio-system/main
+    hosts:
+      - keycloak.{{ .Values.domain }}
+monitoring:
+  enabled: false
+networkPolicies:
+  enabled: false
+  ingressLabels:
+    app: istio-ingressgateway
+    istio: ingressgateway
+  smtpPort: 587
+  ldap:
+    enabled: false
+    cidr: X.X.X.X/X
+    port: 636
+
 #
 ingress:
   enabled: false
+

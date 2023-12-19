@@ -23,10 +23,9 @@ spec:
         number: 443
         protocol: HTTPS
       tls:
-        credentialName: registry-secret-name
         maxProtocolVersion: TLSV1_3
         minProtocolVersion: TLSV1_2
-        mode: SIMPLE
+        mode: PASSTHROUGH
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService

@@ -62,14 +62,27 @@ extraEnv: |-
 # - name: DB_PASSWORD
 #   value: mypassword
 #
-# extraVolumeMounts: |
-#   - name: name
-#     mountPath: /secrets/name
-#     readOnly: true
-# extraVolumes: |
-#   - name: name
-#     secret:
-#       secretName: secret-name
+extraVolumeMounts: |-
+  - mountPath: "/opt/keycloak/conf/truststore.jks"
+    name: kc-truststore
+    subPath: truststore.jks
+    readOnly: true
+  - mountPath: "/opt/keycloak/conf/tls.crt"
+    name: istio-keycloak-tls
+    subPath: tls.crt
+    readOnly: true
+  - mountPath: "/opt/keycloak/conf/tls.key"
+    name: istio-keycloak-tls
+    subPath: tls.key
+    readOnly: true
+#
+extraVolumes: |-
+  - name: kc-truststore
+    secret:
+      secretName: kc-truststore
+  - name: istio-keycloak-tls
+    secret:
+      secretName: istio-keycloak-tls
 #
 replicas: 1
 #

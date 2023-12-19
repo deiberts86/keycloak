@@ -116,30 +116,30 @@ args:
 extraEnv: |-
   - name: KEYCLOAK_PRODUCTION
     value: "true"
-  - name: KC_PROXY
-    value: "edge"
   - name: KC_CACHE
     value: "ispn"
   - name: KC_CACHE_STACK
     value: "kubernetes"
-  - name: KC_HTTP_ENABLED
-    value: "true"
   - name: KC_HOSTNAME
     value: "keycloak.10-7-2-66.sslip.io"
   - name: KC_HOSTNAME_STRICT
     value: "true"
+  - name: KC_HTTP_RELATIVE_PATH
+    value: "/auth"
+  - name: KC_HTTP_ENABLED
+    value: "true"
   - name: KC_HOSTNAME_STRICT_HTTPS
     value: "true"
+  - name: KC_HTTPS_CLIENT_AUTH
+    value: request
   - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
     value: "true"
-  - name: KEYCLOAK_ADMIN
-    value: "admin"
-  - name: KEYCLOAK_ADMIN_PASSWORD
-    value: "password12345"
   - name: JAVA_OPTS_APPEND
-    value: "-Djgroups.dns.query=keycloak-headless"
+    value: "-Djgroups.dns.query=keycloak-keycloakx-headless.keycloak.svc.cluster.local"
   - name: KC_LOG_LEVEL
     value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
+  - name: KC_PROXY
+    value: "edge"
 
 # Additional environment variables for Keycloak mapped from Secret or ConfigMap
 extraEnvFrom: ""
@@ -261,7 +261,7 @@ service:
   labels: {}
   # key: value
   # The Service type
-  type: ClusterIP
+  type: LoadBalancer
   # Optional IP for the load balancer. Used for services of type LoadBalancer only
   loadBalancerIP: ""
   # The http Service port
@@ -294,7 +294,7 @@ serviceHeadless:
 
 ingress:
   # If `true`, an Ingress is created
-  enabled: true
+  enabled: false
   # The name of the Ingress Class associated with this ingress
   ingressClassName: "nginx-secondary"
   # The Service port targeted by the Ingress
