@@ -1,4 +1,3 @@
-# Optionally override the fully qualified name
 fullnameOverride: ""
 
 # Optionally override the name
@@ -133,7 +132,7 @@ extraEnv: |-
   - name: KC_CACHE_STACK
     value: "kubernetes"
   - name: KC_HOSTNAME
-    value: "keycloak.10-7-2-65.sslip.io"
+    value: "keycloak.10-7-2-63.sslip.io"
   - name: KC_HOSTNAME_STRICT
     value: "true"
   - name: KC_HTTP_ENABLED
@@ -141,17 +140,17 @@ extraEnv: |-
   - name: KC_HOSTNAME_STRICT_HTTPS
     value: "true"
   - name: KC_HTTPS_CLIENT_AUTH
-    value: request
+    value: "request"
   - name: JAVA_OPTS_APPEND
     value: "-Djgroups.dns.query=keycloak-keycloakx-headless"
   - name: KC_LOG_LEVEL
     value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
-  - name: KC_PROXY
-    value: "edge"
   - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
     value: "true"
   - name: KC_HTTP_RELATIVE_PATH
     value: "/auth"
+  # - name: KC_HOSTNAME_URL
+  #   value: "keycloak.10-7-2-63.sslip.io"
 
 # Additional environment variables for Keycloak mapped from Secret or ConfigMap
 extraEnvFrom: ""
@@ -291,7 +290,7 @@ service:
   labels: {}
   # key: value
   # The Service type
-  type: ClusterIP
+  type: LoadBalancer
   # Optional IP for the load balancer. Used for services of type LoadBalancer only
   loadBalancerIP: ""
   # The http Service port
@@ -413,7 +412,7 @@ cache:
 
 proxy:
   enabled: false
-  mode: passthrough
+  mode: edge
 
 metrics:
   enabled: true

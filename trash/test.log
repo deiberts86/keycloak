@@ -1,0 +1,33 @@
+Appending additional Java properties to JAVA_OPTS: -Djgroups.dns.query=keycloak-keycloakx-headless
+2023-12-21T03:06:35.143869888Z Changes detected in configuration. Updating the server image.
+2023-12-21T03:06:35.213162464Z Updating the configuration and installing your custom providers, if any. Please wait.
+2023-12-21T03:06:57.328998702Z 2023-12-21 03:06:33,105 WARN  [org.keycloak.common.util.KerberosJdkProvider] (main) Kerberos feature not supported by JDK. Check security providers for your JDK in java.security. Supported mechanisms: []
+2023-12-21T03:06:57.406220682Z 2023-12-21 03:06:44,450 WARN  [org.keycloak.common.util.KerberosJdkProvider] (main) Kerberos feature not supported by JDK. Check security providers for your JDK in java.security. Supported mechanisms: []
+2023-12-21 03:07:30,128 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 47493ms
+Server configuration updated and persisted. Run the following command to review the configuration:
+2023-12-21T03:07:30.330594226Z 
+	kc.sh show-config
+2023-12-21T03:07:30.332580311Z 
+Next time you run the server, just run:
+
+	kc.sh start --optimized 
+
+2023-12-21 03:07:32,843 WARN  [org.keycloak.common.util.KerberosJdkProvider] (main) Kerberos feature not supported by JDK. Check security providers for your JDK in java.security. Supported mechanisms: []
+2023-12-21 03:07:37,824 INFO  [org.keycloak.quarkus.runtime.hostname.DefaultHostnameProvider] (main) Hostname settings: Base URL: <unset>, Hostname: keycloak.10-7-2-65.sslip.io, Strict HTTPS: true, Path: <request>, Strict BackChannel: false, Admin URL: <unset>, Admin: <request>, Port: -1, Proxied: true
+2023-12-21 03:07:53,117 WARN  [org.infinispan.PERSISTENCE] (keycloak-cache-init) ISPN000554: jboss-marshalling is deprecated and planned for removal
+2023-12-21 03:07:53,801 INFO  [org.infinispan.CONTAINER] (keycloak-cache-init) ISPN000556: Starting user marshaller 'org.infinispan.jboss.marshalling.core.JBossUserMarshaller'
+2023-12-21 03:07:56,015 INFO  [org.infinispan.CLUSTER] (keycloak-cache-init) ISPN000078: Starting JGroups channel `ISPN` with stack `kubernetes`
+2023-12-21 03:07:56,026 INFO  [org.jgroups.JChannel] (keycloak-cache-init) local_addr: ba3f7adc-d72c-4fc4-99e7-bead3bb2ad5f, name: keycloak-keycloakx-0-47447
+2023-12-21 03:07:56,111 INFO  [org.jgroups.protocols.FD_SOCK2] (keycloak-cache-init) server listening on *.57800
+2023-12-21 03:07:56,945 WARN  [io.quarkus.vertx.http.runtime.VertxHttpRecorder] (main) The X-Forwarded-* and Forwarded headers will be considered when determining the proxy address. This configuration can cause a security issue as clients can forge requests and send a forwarded header that is not overwritten by the proxy. Please consider use one of these headers just to forward the proxy address in requests.
+2023-12-21 03:07:58,133 INFO  [org.jgroups.protocols.pbcast.GMS] (keycloak-cache-init) keycloak-keycloakx-0-47447: no members discovered after 2006 ms: creating cluster as coordinator
+2023-12-21 03:07:58,154 INFO  [org.infinispan.CLUSTER] (keycloak-cache-init) ISPN000094: Received new cluster view for channel ISPN: [keycloak-keycloakx-0-47447|0] (1) [keycloak-keycloakx-0-47447]
+2023-12-21 03:07:58,550 INFO  [org.infinispan.CLUSTER] (keycloak-cache-init) ISPN000079: Channel `ISPN` local address is `keycloak-keycloakx-0-47447`, physical addresses are `[10.42.11.55:7800]`
+2023-12-21 03:07:58,609 WARN  [org.infinispan.CONFIG] (keycloak-cache-init) ISPN000569: Unable to persist Infinispan internal caches as no global state enabled
+2023-12-21 03:08:00,911 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: keycloak-keycloakx-0-47447, Site name: null
+2023-12-21 03:08:03,452 INFO  [org.keycloak.broker.provider.AbstractIdentityProviderMapper] (main) Registering class org.keycloak.broker.provider.mappersync.ConfigSyncEventListener
+2023-12-21 03:08:09,413 INFO  [io.quarkus] (main) Keycloak 22.0.5 on JVM (powered by Quarkus 3.2.7.Final) started in 38.678s. Listening on: http://0.0.0.0:8080 and https://0.0.0.0:8443
+2023-12-21 03:08:09,414 INFO  [io.quarkus] (main) Profile prod activated. 
+2023-12-21T03:08:09.415828122Z 2023-12-21 03:08:09,414 INFO  [io.quarkus] (main) Installed features: [agroal, cdi, hibernate-orm, jdbc-h2, jdbc-mariadb, jdbc-mssql, jdbc-mysql, jdbc-oracle, jdbc-postgresql, keycloak, logging-gelf, micrometer, narayana-jta, reactive-routes, resteasy, resteasy-jackson, smallrye-context-propagation, smallrye-health, vertx]
+2023-12-21 03:08:34,025 DEBUG [org.keycloak.events] (executor-thread-4) type=LOGIN, realmId=81c4c6ad-c880-4a46-8005-e65aea853ff8, clientId=security-admin-console, userId=9529bb1b-859e-4da2-af61-6f12e581ebda, ipAddress=10.42.11.51, auth_method=openid-connect, auth_type=code, response_type=code, redirect_uri=https://keycloak.10-7-2-65.sslip.io/admin/master/console/#/master/clients, consent=no_consent_required, code_id=cfce9d0d-9f98-4676-a48e-3602971e6cba, username=admin, response_mode=fragment, authSessionParentId=cfce9d0d-9f98-4676-a48e-3602971e6cba, authSessionTabId=2z1sSplCzvs
+2023-12-21 03:08:35,333 DEBUG [org.keycloak.events] (executor-thread-1) type=CODE_TO_TOKEN, realmId=81c4c6ad-c880-4a46-8005-e65aea853ff8, clientId=security-admin-console, userId=9529bb1b-859e-4da2-af61-6f12e581ebda, ipAddress=10.42.11.51, token_id=f29a9121-ee5f-4bbc-9a7b-715ee898e12a, grant_type=authorization_code, refresh_token_type=Refresh, scope='openid email profile', refresh_token_id=5ecec99c-fe55-4261-b6d9-54895d1139eb, code_id=cfce9d0d-9f98-4676-a48e-3602971e6cba, client_auth_method=client-secret

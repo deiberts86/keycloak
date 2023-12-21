@@ -114,8 +114,26 @@ args:
 
 # Additional environment variables for Keycloak
 extraEnv: |-
+  - name: KC_HOSTNAME_DEBUG
+    value: "true"
+  - name: KEYCLOAK_ADMIN
+    value: "admin"
+  - name: KEYCLOAK_ADMIN_PASSWORD
+    value: "password"
   - name: KEYCLOAK_PRODUCTION
     value: "true"
+  - name: KC_HEALTH_ENABLED
+    value: "true"
+  - name: KC_CACHE_STACK
+    value: "kubernetes"
+  - name: KC_HOSTNAME
+    value: "keycloak.10-7-2-65.sslip.io"
+  - name: KC_HOSTNAME_STRICT
+    value: "true"
+  - name: KC_HOSTNAME_STRICT_HTTPS
+    value: "true"
+  - name: KC_HTTP_ENABLED
+    value: "false"
   - name: KC_HTTPS_CERTIFICATE_FILE
     value: "/opt/keycloak/conf/tls.crt"
   - name: KC_HTTPS_CERTIFICATE_KEY_FILE
@@ -124,34 +142,14 @@ extraEnv: |-
     value: "/opt/keycloak/conf/truststore.jks"
   - name: KC_HTTPS_TRUST_STORE_PASSWORD
     value: "password"
-  - name: KC_HEALTH_ENABLED
-    value: "true"
-  - name: KC_METRICS_ENABLED
-    value: "true"
-  - name: KC_CACHE
-    value: "ispn"
-  - name: KC_CACHE_STACK
-    value: "kubernetes"
-  - name: KC_HOSTNAME
-    value: "keycloak.10-7-2-65.sslip.io"
-  - name: KC_HOSTNAME_STRICT
-    value: "true"
-  - name: KC_HTTP_ENABLED
-    value: "false"
-  - name: KC_HOSTNAME_STRICT_HTTPS
-    value: "true"
   - name: KC_HTTPS_CLIENT_AUTH
-    value: request
+    value: "request"
   - name: JAVA_OPTS_APPEND
     value: "-Djgroups.dns.query=keycloak-keycloakx-headless"
   - name: KC_LOG_LEVEL
     value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
-  - name: KC_PROXY
-    value: "edge"
   - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
     value: "true"
-  - name: KC_HTTP_RELATIVE_PATH
-    value: "/auth"
 
 # Additional environment variables for Keycloak mapped from Secret or ConfigMap
 extraEnvFrom: ""
@@ -242,9 +240,9 @@ extraVolumes: |-
   - name: kc-truststore
     secret:
       secretName: kc-truststore
-  - name: keycloak-tls
+  - name: nginx-tls-cert
     secret:
-      secretName: keycloak-tls
+      secretName: nginx-tls-cert
 
 # Add additional volumes mounts, e. g. for custom themes
 extraVolumeMounts: |-
@@ -253,11 +251,11 @@ extraVolumeMounts: |-
     subPath: truststore.jks
     readOnly: true
   - mountPath: "/opt/keycloak/conf/tls.crt"
-    name: keycloak-tls
+    name: nginx-tls-cert
     subPath: tls.crt
     readOnly: true
   - mountPath: "/opt/keycloak/conf/tls.key"
-    name: keycloak-tls
+    name: nginx-tls-cert
     subPath: tls.key
     readOnly: true
 
@@ -412,8 +410,8 @@ cache:
   stack: kubernetes
 
 proxy:
-  enabled: false
-  mode: passthrough
+  enabled: true
+  mode: edge
 
 metrics:
   enabled: true
@@ -423,7 +421,7 @@ health:
 
 http:
   # For backwards compatibility reasons we set this to the value used by previous Keycloak versions.
-  relativePath: "/auth"
+  relativePath: "/"
 
 serviceMonitor:
   # If `true`, a ServiceMonitor resource for the prometheus-operator is created
