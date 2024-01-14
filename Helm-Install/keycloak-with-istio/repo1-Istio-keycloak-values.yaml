@@ -27,7 +27,7 @@ extraEnv: |-
   - name: KC_CACHE_STACK
     value: "kubernetes"
   - name: KC_HOSTNAME
-    value: "keycloak.10-7-2-65.sslip.io"
+    value: "site.domain.com"
   - name: KC_HOSTNAME_STRICT
     value: "true"
   - name: KC_HOSTNAME_STRICT_HTTPS
@@ -202,11 +202,11 @@ postgresql:
 #
 secrets: {}
 
-domain: 10-7-2-65.sslip.io
+domain: domain.com
 istio:
   # Toggle istio integration
   enabled: true
-  injection: "disabled"
+  injection: "enabled"
   mtls:
     # -- STRICT = Allow only mutual TLS traffic,
     # PERMISSIVE = Allow both plain text and mutual TLS traffic
@@ -217,11 +217,11 @@ istio:
     annotations: {}
     labels: {}
     gateways:
-      - istio-system/main
+      - istio-system/istio-ingressgateway
     hosts:
       - keycloak.{{ .Values.domain }}
 monitoring:
-  enabled: false
+  enabled: true
 networkPolicies:
   enabled: false
   ingressLabels:
@@ -236,4 +236,3 @@ networkPolicies:
 #
 ingress:
   enabled: false
-

@@ -49,32 +49,42 @@ securityContext:
 
 # Additional environment variables for Keycloak
 extraEnv: |-
-  - name: KEYCLOAK_PRODUCTION
-    value: "true"
-  - name: KC_PROXY
-    value: "edge"
-  - name: KC_CACHE
-    value: "ispn"
-  - name: KC_CACHE_STACK
-    value: "kubernetes"
-  - name: KC_HTTP_ENABLED
-    value: "true"
-  - name: KC_HOSTNAME
-    value: "keycloak.domain.com"
-  - name: KC_HOSTNAME_STRICT
-    value: "true"
-  - name: KC_HOSTNAME_STRICT_HTTPS
-    value: "true"
-  - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
+  - name: KC_HOSTNAME_DEBUG
     value: "true"
   - name: KEYCLOAK_ADMIN
     value: "admin"
   - name: KEYCLOAK_ADMIN_PASSWORD
-    value: "password12345"
+    value: "password"
+  - name: KEYCLOAK_PRODUCTION
+    value: "true"
+  - name: KC_HEALTH_ENABLED
+    value: "true"
+  - name: KC_CACHE_STACK
+    value: "kubernetes"
+  - name: KC_HOSTNAME
+    value: "site.domain.com"
+  - name: KC_HOSTNAME_STRICT
+    value: "true"
+  - name: KC_HOSTNAME_STRICT_HTTPS
+    value: "true"
+  - name: KC_HTTP_ENABLED
+    value: "false"
+  - name: KC_HTTPS_CERTIFICATE_FILE
+    value: "/opt/keycloak/conf/tls.crt"
+  - name: KC_HTTPS_CERTIFICATE_KEY_FILE
+    value: "/opt/keycloak/conf/tls.key"
+  - name: KC_HTTPS_TRUST_STORE_FILE
+    value: "/opt/keycloak/conf/truststore.jks"
+  - name: KC_HTTPS_TRUST_STORE_PASSWORD
+    value: "password"
+  - name: KC_HTTPS_CLIENT_AUTH
+    value: "request"
   - name: JAVA_OPTS_APPEND
     value: "-Djgroups.dns.query=keycloak-headless"
   - name: KC_LOG_LEVEL
     value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
+  - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
+    value: "true"
 
 # Additional environment variables for Keycloak mapped from Secret or ConfigMap
 extraEnvFrom: ""
@@ -137,10 +147,28 @@ resources:
     memory: "1Gi"
 
 # Add additional volumes, e. g. for custom themes
-extraVolumes: ""
+extraVolumes: |-
+  - name: kc-truststore
+    secret:
+      secretName: kc-truststore
+  - name: nginx-tls-cert
+    secret:
+      secretName: nginx-tls-cert
 
 # Add additional volumes mounts, e. g. for custom themes
-extraVolumeMounts: ""
+extraVolumeMounts: |-
+  - mountPath: "/opt/keycloak/conf/truststore.jks"
+    name: kc-truststore
+    subPath: truststore.jks
+    readOnly: true
+  - mountPath: "/opt/keycloak/conf/tls.crt"
+    name: nginx-tls-cert
+    subPath: tls.crt
+    readOnly: true
+  - mountPath: "/opt/keycloak/conf/tls.key"
+    name: nginx-tls-cert
+    subPath: tls.key
+    readOnly: true
 
 # Add additional ports, e. g. for admin console or exposing JGroups ports
 extraPorts: []

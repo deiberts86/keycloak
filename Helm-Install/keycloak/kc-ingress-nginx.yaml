@@ -11,7 +11,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: keycloak.10-7-2-65.sslip.io # THIS SHOULD MATCH YOUR MOUNTED KEYCLOAK TLS CERT
+    - host: site.domain.com # THIS SHOULD MATCH YOUR MOUNTED KEYCLOAK TLS CERT
       http:
         paths:
           - backend:

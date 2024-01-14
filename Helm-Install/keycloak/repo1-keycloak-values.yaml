@@ -1,11 +1,9 @@
 # Additional Pod annotations
-podAnnotations:
-  proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
-  sidecar.istio.io/rewriteAppHTTPProbers: "true"
+podAnnotations: {}
+
 # Pod Labels for Keycloak
-podLabels:
-  app: keycloak
-  version: v1
+podLabels: {}
+
 #
 command:
   - "/opt/keycloak/bin/kc.sh"
@@ -14,6 +12,26 @@ args:
   - "start"
 #
 extraEnv: |-
+  - name: KC_HOSTNAME_DEBUG
+    value: "true"
+  - name: KEYCLOAK_ADMIN
+    value: "admin"
+  - name: KEYCLOAK_ADMIN_PASSWORD
+    value: "password"
+  - name: KEYCLOAK_PRODUCTION
+    value: "true"
+  - name: KC_HEALTH_ENABLED
+    value: "true"
+  - name: KC_CACHE_STACK
+    value: "kubernetes"
+  - name: KC_HOSTNAME
+    value: "site.domain.com"
+  - name: KC_HOSTNAME_STRICT
+    value: "true"
+  - name: KC_HOSTNAME_STRICT_HTTPS
+    value: "true"
+  - name: KC_HTTP_ENABLED
+    value: "false"
   - name: KC_HTTPS_CERTIFICATE_FILE
     value: "/opt/keycloak/conf/tls.crt"
   - name: KC_HTTPS_CERTIFICATE_KEY_FILE
@@ -22,48 +40,14 @@ extraEnv: |-
     value: "/opt/keycloak/conf/truststore.jks"
   - name: KC_HTTPS_TRUST_STORE_PASSWORD
     value: "password"
-  - name: KC_HEALTH_ENABLED
-    value: "true"
-  - name: KEYCLOAK_PRODUCTION
-    value: "true"
-  - name: KC_PROXY
-    value: "edge"
-  - name: KC_HTTP_RELATIVE_PATH
-    value: "/auth"
-  - name: KC_CACHE
-    value: "ispn"
-  - name: KC_CACHE_STACK
-    value: "kubernetes"
-  - name: KC_HTTP_ENABLED
-    value: "false"
-  - name: KC_HOSTNAME
-    value: "keycloak.domain.com"
-  - name: KC_HOSTNAME_STRICT
-    value: "true"
-  - name: KC_HOSTNAME_STRICT_HTTPS
-    value: "true"
-  - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
-    value: "true"
+  - name: KC_HTTPS_CLIENT_AUTH
+    value: "request"
   - name: JAVA_OPTS_APPEND
     value: "-Djgroups.dns.query=keycloak-headless"
   - name: KC_LOG_LEVEL
     value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
-# - name: DB_VENDOR
-#   value: postgres
-# - name: DB_ADDR
-#   value: "postgresql.keycloak.svc.cluster.local"
-# - name: DB_PORT
-#   value: "5432"
-# - name: DB_DATABASE
-#   value: postgres
-# - name: DB_USER
-#   value: postgres
-# - name: DB_PASSWORD
-#   value: postgres
-# - name: KEYCLOAK_ADMIN
-#   value: "admin"
-# - name: KEYCLOAK_ADMIN_PASSWORD
-#   value: ""
+  - name: QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY
+    value: "true"
 # name: DB_USER_FILE
 # value: "/secrets/name/user"
 # name: DB_PASSWORD_FILE
@@ -75,11 +59,11 @@ extraVolumeMounts: |-
     subPath: truststore.jks
     readOnly: true
   - mountPath: "/opt/keycloak/conf/tls.crt"
-    name: istio-keycloak-tls
+    name: nginx-tls-cert
     subPath: tls.crt
     readOnly: true
   - mountPath: "/opt/keycloak/conf/tls.key"
-    name: istio-keycloak-tls
+    name: nginx-tls-cert
     subPath: tls.key
     readOnly: true
 #
@@ -87,15 +71,15 @@ extraVolumes: |-
   - name: kc-truststore
     secret:
       secretName: kc-truststore
-  - name: istio-keycloak-tls
+  - name: nginx-tls-cert
     secret:
-      secretName: istio-keycloak-tls
+      secretName: nginx-tls-cert
 #
 replicas: 1
 #
 image:
   repository: registry1.dso.mil/ironbank/opensource/keycloak/keycloak
-  tag: "21.1.1"
+  tag: "23.0.3"
   pullPolicy: Always
 #
 imagePullSecrets:
@@ -214,46 +198,12 @@ postgresql:
       drop:
         - ALL
 #
-secrets:
-  env:
-    stringData:
-      # https://access.redhat.com/documentation/en-us/openjdk/11/html-single/configuring_openjdk_11_on_rhel_with_fips/index
-      JAVA_TOOL_OPTIONS: "-Dcom.redhat.fips=false"
-      # default admin credentials. Override them for production deployments
-      KEYCLOAK_ADMIN: "admin"
-      KEYCLOAK_ADMIN_PASSWORD: "password12345"
+secrets: {}
 
-domain: keycloak.10-7-2-63.sslip.io
+domain: domain.com
 istio:
   # Toggle istio integration
-  enabled: true
-  injection: "disabled"
-  mtls:
-    # -- STRICT = Allow only mutual TLS traffic,
-    # PERMISSIVE = Allow both plain text and mutual TLS traffic
-    mode: STRICT
-  keycloak:
-    # Toggle vs creation
-    enabled: true
-    annotations: {}
-    labels: {}
-    gateways:
-      - istio-system/main
-    hosts:
-      - keycloak.{{ .Values.domain }}
-monitoring:
   enabled: false
-networkPolicies:
-  enabled: false
-  ingressLabels:
-    app: istio-ingressgateway
-    istio: ingressgateway
-  smtpPort: 587
-  ldap:
-    enabled: false
-    cidr: X.X.X.X/X
-    port: 636
-
 #
 ingress:
   enabled: false
