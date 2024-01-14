@@ -26,6 +26,8 @@ Keycloak is not the easiest thing to setup and it can be quite cumbersome for so
 - [Create your Java Truststore](/docs/get-dod-trust.md)
 - [Install Keycloak with Helm](/docs/keycloak-install.md)
 
+![Keycloak Master Realm](/images/Keycloak-Config/master-realm.png)
+
 ## Install KeyCloak with ISTIO integration and Point to PostgreSQL Database
 *UNDER CONSTRUCTION*
 
