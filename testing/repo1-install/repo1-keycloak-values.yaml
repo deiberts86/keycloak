@@ -25,7 +25,7 @@ extraEnv: |-
   - name: KC_CACHE_STACK
     value: "kubernetes"
   - name: KC_HOSTNAME
-    value: "site.domain.com"
+    value: "keycloak.10-7-2-66.sslip.io"
   - name: KC_HOSTNAME_STRICT
     value: "true"
   - name: KC_HOSTNAME_STRICT_HTTPS
@@ -78,8 +78,9 @@ extraVolumes: |-
 replicas: 1
 #
 image:
-  repository: registry1.dso.mil/ironbank/opensource/keycloak/keycloak
-  tag: "23.0.3"
+  repository: quay.io/keycloak/keycloak
+  #repository: registry1.dso.mil/ironbank/opensource/keycloak/keycloak
+  tag: "22.0.5"
   pullPolicy: Always
 #
 imagePullSecrets:
@@ -200,7 +201,7 @@ postgresql:
 #
 secrets: {}
 
-domain: domain.com
+domain: sslip.io
 istio:
   # Toggle istio integration
   enabled: false

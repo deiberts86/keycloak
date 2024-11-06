@@ -3,17 +3,17 @@ global:
 
 auth:
   enablePostgresUser: true
-  postgresPassword: ""
+  postgresPassword: postgres
   username: postgres
-  password: ""
+  password: postgres
   database: keycloak
   replicationUsername: repl_user
-  replicationPassword: ""
-  existingSecret: "postgresql-secret"
-  secretKeys:
-    adminPasswordKey: "admin-password"
-    userPasswordKey: "password"
-    replicationPasswordKey: "repmgr-password"
+  replicationPassword: replication
+  # existingSecret: "postgresql-secret"
+  # secretKeys:
+  #   adminPasswordKey: "admin-password"
+  #   userPasswordKey: "password"
+  #   replicationPasswordKey: "repmgr-password"
 
 
 image:
@@ -44,7 +44,7 @@ primary:
       drop:
         - ALL
 
-architecture: standalone
+# architecture: standalone
 
 # replication:
 #   replication.synchronousCommit: "off"
