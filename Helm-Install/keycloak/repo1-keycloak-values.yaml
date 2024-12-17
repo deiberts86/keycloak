@@ -86,12 +86,17 @@ imagePullSecrets:
 - name: registry1-secret
 #
 updateStrategy: RollingUpdate
-#
+
+# SecurityContext for the Keycloak container
 podSecurityContext:
-  fsGroup: 1000
+  fsGroup: 2000
+  runAsUser: 2000
+  runAsGroup: 2000
   runAsNonRoot: true
+
 securityContext:
-  runAsUser: 1000
+  runAsUser: 2000
+  runAsGroup: 2000
   runAsNonRoot: true
   capabilities:
     drop:
@@ -110,31 +115,33 @@ networkPolicy:
   # If true, the Network policies are deployed
   enabled: false
 
-pgchecker:
+dbchecker:
+  enabled: true
   image:
     # Docker image used to check Postgresql readiness at startup
     repository: registry1.dso.mil/ironbank/opensource/postgres/postgresql12
     # Image tag for the pgchecker image
-    tag: 12.15
-    # Image pull policy for the pgchecker image
-    pullPolicy: Always
-  # SecurityContext for the pgchecker container
+    tag: "12.20"
+    # Image pull policy for the dbchecker image
+    pullPolicy: IfNotPresent
+  # SecurityContext for the dbchecker container
   securityContext:
     allowPrivilegeEscalation: false
-    runAsUser: 1337
-    runAsGroup: 1337
+    runAsUser: 1000
+    runAsGroup: 1000
     runAsNonRoot: true
     capabilities:
       drop:
         - ALL
-  # Resource requests and limits for the pgchecker container
+  # Resource requests and limits for the dbchecker container
   resources:
     requests:
-      cpu: "20m"
-      memory: "32Mi"
+      cpu: "250m"
+      memory: "256Mi"
     limits:
-      cpu: "20m"
-      memory: "32Mi"
+      cpu: "250m"
+      memory: "256Mi"
+
 #
 autoscaling:
   # If `true`, an autoscaling/v2beta2 HorizontalPodAutoscaler resource is created (requires Kubernetes 1.18 or above)

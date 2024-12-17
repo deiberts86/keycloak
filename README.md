@@ -1,9 +1,10 @@
 # Keycloak for Kubernetes
 
 - Description:
-Keycloak is not the easiest thing to setup and it can be quite cumbersome for someone to learn not only this software but also the deployment onto a Kubernetes cluster. There are a lot of moving parts to this software to deploy it properly and you should have an understanding what Keycloak requires and does under the hood.
+Keycloak is not the easiest thing to setup and it can be quite cumbersome for someone to learn not only this software but also the deployment onto a Kubernetes cluster. There are a lot of moving parts to this software to deploy it properly and you should have an understanding what Keycloak requires and what it does under the hood.
 
 ## Steps to install KeyCloak for Kubernetes
+[DSO Helm Install Keycloak](./docs/helm-install_dso-kc/helm-install.md)
 
 ### Prerequisites
 - helm
