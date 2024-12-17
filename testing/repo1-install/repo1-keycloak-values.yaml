@@ -25,7 +25,7 @@ extraEnv: |-
   - name: KC_CACHE_STACK
     value: "kubernetes"
   - name: KC_HOSTNAME
-    value: "site.domain.com"
+    value: "keycloak.10-7-2-66.sslip.io"
   - name: KC_HOSTNAME_STRICT
     value: "true"
   - name: KC_HOSTNAME_STRICT_HTTPS
@@ -78,25 +78,21 @@ extraVolumes: |-
 replicas: 1
 #
 image:
-  repository: registry1.dso.mil/ironbank/opensource/keycloak/keycloak
-  tag: "23.0.3"
+  repository: quay.io/keycloak/keycloak
+  #repository: registry1.dso.mil/ironbank/opensource/keycloak/keycloak
+  tag: "22.0.5"
   pullPolicy: Always
 #
 imagePullSecrets:
 - name: registry1-secret
 #
 updateStrategy: RollingUpdate
-
-# SecurityContext for the Keycloak container
+#
 podSecurityContext:
-  fsGroup: 2000
-  runAsUser: 2000
-  runAsGroup: 2000
+  fsGroup: 1000
   runAsNonRoot: true
-
 securityContext:
-  runAsUser: 2000
-  runAsGroup: 2000
+  runAsUser: 1000
   runAsNonRoot: true
   capabilities:
     drop:
@@ -115,33 +111,31 @@ networkPolicy:
   # If true, the Network policies are deployed
   enabled: false
 
-dbchecker:
-  enabled: true
+pgchecker:
   image:
     # Docker image used to check Postgresql readiness at startup
     repository: registry1.dso.mil/ironbank/opensource/postgres/postgresql12
     # Image tag for the pgchecker image
-    tag: "12.20"
-    # Image pull policy for the dbchecker image
-    pullPolicy: IfNotPresent
-  # SecurityContext for the dbchecker container
+    tag: 12.15
+    # Image pull policy for the pgchecker image
+    pullPolicy: Always
+  # SecurityContext for the pgchecker container
   securityContext:
     allowPrivilegeEscalation: false
-    runAsUser: 1000
-    runAsGroup: 1000
+    runAsUser: 1337
+    runAsGroup: 1337
     runAsNonRoot: true
     capabilities:
       drop:
         - ALL
-  # Resource requests and limits for the dbchecker container
+  # Resource requests and limits for the pgchecker container
   resources:
     requests:
-      cpu: "250m"
-      memory: "256Mi"
+      cpu: "20m"
+      memory: "32Mi"
     limits:
-      cpu: "250m"
-      memory: "256Mi"
-
+      cpu: "20m"
+      memory: "32Mi"
 #
 autoscaling:
   # If `true`, an autoscaling/v2beta2 HorizontalPodAutoscaler resource is created (requires Kubernetes 1.18 or above)
@@ -207,7 +201,7 @@ postgresql:
 #
 secrets: {}
 
-domain: domain.com
+domain: sslip.io
 istio:
   # Toggle istio integration
   enabled: false

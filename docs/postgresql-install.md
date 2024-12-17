@@ -24,12 +24,12 @@ kubectl -n keycloak create secret generic postgresql-secret --from-literal=passw
 helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
-* To grab the values.yaml for PostgreSQL version 13.2.24 and edit it
+* To grab the values.yaml for PostgreSQL version 14.0.4 and edit it
 
 ```sh
 cd /home/username
-helm pull bitnami/postgresql --version 13.2.24
-tar -zxvf postgresql-13.2.24
+helm pull bitnami/postgresql --version 14.0.4
+tar -zxvf postgresql-14.0.4
 cd postgresql
 ls -lah
 ```
@@ -40,12 +40,12 @@ ls -lah
 ```sh
 cat > postgresql-values.yaml <<EOF
 global:
-  storageClass: "longhorn"
+  storageClass: ""
 
 image:
   registry: docker.io
   repository: bitnami/postgresql
-  tag: 16.0.0-debian-11-r13
+  tag: 16.2.0-debian-11-r1
 #  pullSecrets:
 #  - ironbank-secret
   pullPolicy: Always
@@ -58,7 +58,7 @@ auth:
   enablePostgresUser: true
   postgresPassword: null
   username: postgres
-  password: postgres
+  password: null
   database: keycloak
   replicationUsername: repl_user
   replicationPassword: null

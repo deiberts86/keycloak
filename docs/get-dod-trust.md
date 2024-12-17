@@ -20,7 +20,7 @@ Requirements:
 ```
 
 - Note: You should get a new file named `truststore.jks`
-- Note*: If you're using your own CA Bundle, then you need to import that as well.  The Tools folder and scripts can be curtailed to your environment. For example, if you have your CA bundle, edit the `ca_bundle_to_truststore.sh` script to look for that CA bundle. There are variables that can be edited.
+- Note*: If you're using your own CA Bundle, then you need to import that as well.  The [Tools](/SSL/tools/) folder and scripts can be curtailed to your environment. For example, if you have your CA bundle, edit the `ca_bundle_to_truststore.sh` script to look for that CA bundle. There are variables that can be edited.
 
 # Create Java TrustStore Secret for KeyCloak
 
