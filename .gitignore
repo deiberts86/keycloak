@@ -1,3 +1,4 @@
 **/docs/openssl*
 **/charts/*
 working/*
+dockerbuild/bouncy/*

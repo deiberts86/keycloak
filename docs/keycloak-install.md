@@ -1,7 +1,7 @@
 # Install Keycloak with Codecentric KeycloakX Chart
 - Requirements:
   - Your [Namespace](/docs/create-namespace.md) should be pre-seeded to setup Kubernetes PSA.
-  - Your [JAVA Truststore](/docs/get-dod-trust.md) or Keystore needs to be built and added to Kubernetes namespaace you plan to use for Keycloak.
+  - Your [JAVA Truststore](/docs/get-dod-trust.md) or Keystore needs to be built and added to Kubernetes namespace you plan to use for Keycloak.
   - Your [TLS certificate](/docs/create-secret.md) also needs to be created and added to the Kubernetes namespace you plan to use for Keycloak.
 
 - Once the above steps are in place, then continue...

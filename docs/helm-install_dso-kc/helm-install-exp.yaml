@@ -1,178 +1,36 @@
-# Install Keycloak from DSO Ironbank
-- Requirements:
-  - A workstation or Jumpbox with a deployment folder of your choice
-  - Software:
-    - kubectl
-    - helm
-    - git
-  - A Kubernetes cluster of your choice
-    - You should have a CSI for persistence with Keycloak settings
-  - **Registration to IronBank (requires creating a login)**
-    - Includes repo1.dso.mil, registry1.dso.mil, and ironbank.dso.mil
-      - Note: You need a valid company email address and authenticator App through Google
-
-## Git Clone Repo1 Keycloak Repository
-- We will work in the `/var/tmp/` directory for this example
-
-```sh
-cd /var/tmp
-git clone https://repo1.dso.mil/big-bang/product/packages/keycloak.git
-cd keycloak/chart
-helm package . 
-```
-- You should get a successfully packaged chart from there. Save it elsewhere where you want to deploy your code. In this instance, it will be save outside of the git folder that was created when cloned.
-
-```sh
-mv keycloak-<version>.tgz ../../
-```
-
-## Install Cert-Manager
-- Install Cert-Manager for certificate management and leverage self-signed CA or bring your own!
-
-```sh
-helm repo add jetstack https://charts.jetstack.io --force-update
-helm upgrade -i \
-  cert-manager jetstack/cert-manager \
-  --namespace cert-manager \
-  --create-namespace \
-  --version v1.16.1 \
-  --set crds.enabled=true
-```
-
-## Create Cluster Issuer and CA Certificate to Issue Self-Signed Certs
-```sh
-kubectl apply -f -<<EOF
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: selfsigned-issuer
-spec:
-  selfSigned: {}
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: kc-lab-ca
-  namespace: cert-manager
-spec:
-  isCA: true
-  commonName: kc-lab
-  secretName: root-secret
-  privateKey:
-    algorithm: ECDSA
-    size: 256
-  issuerRef:
-    name: selfsigned-issuer
-    kind: ClusterIssuer
-    group: cert-manager.io
----
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: kc-lab-clusterissuer
-spec:
-  ca:
-    secretName: root-secret
-EOF
-```
-
-## Create Registry1 Secret
-- Create secret with your access to Registry1 DSO
-  - fill in the blanks for username and password
-
-```sh
-kubectl create namespace keycloak
-kubectl -n keycloak create secret docker-registry registry1-secret \
-  --docker-server='registry1.dso.mil' \
-  --docker-username='<your-name>' \
-  --docker-password='<your-password>' \
-  --docker-email='<your email>'
-```
-
-## Create TLS Certificates to include a SAN
-- Using just a ClusterIssuer or Issuer (by namespace) with Cert-Manager is great but there are some short comings. Keycloak Auth typically requires a SAN on the TLS certificate for Auth to work, especially with Rancher MCM. We will go with the pre-creation method of the TLS secrets. Note, the console secret is optional.
-
-```sh
-kubectl apply -f -<<EOF
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: kc-tls-cert
-  namespace: keycloak
-spec:
-  secretName: kc-tls-cert
-  duration: 2160h #90 days
-  renewBefore: 360h #15 days
-# Requires a valid DNS and CN
-  commonName: keycloak.deiberts.domain
-  dnsNames:
-    - keycloak.deiberts.domain
-  usages:
-    - server auth
-    - client auth
-  issuerRef:
-    name: kc-lab-clusterissuer
-    kind: ClusterIssuer
-EOF
-```
-
-Optional Certificate for dedicated Console Access Ingress
-```sh
-kubectl apply -f -<<EOF
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: kc-console-tls-cert
-  namespace: keycloak
-spec:
-  secretName: kc-console-tls-cert
-  duration: 2160h #90 days
-  renewBefore: 360h #15 days
-# Requires a valid DNS and CN
-  commonName: keycloak-console.deiberts.domain
-  dnsNames:
-    - keycloak-console.deiberts.domain
-  usages:
-    - server auth
-    - client auth
-  issuerRef:
-    name: kc-lab-clusterissuer
-    kind: ClusterIssuer
-EOF
-```
-
-## Keycloak Values
-```sh
-cat > keycloak-values.yaml <<EOF
 # Additional Pod annotations
 podAnnotations: {}
 
 # Pod Labels for Keycloak
 podLabels: {}
 
-#
 command:
-  - "/opt/keycloak/bin/kc.sh"
+  - "/bin/bash"
+  - "-c"
+
 #
 args:
-  - "start"
+  - '/opt/keycloak/bin/kc.sh build --features="fips" && /opt/keycloak/bin/kc.sh start --optimized'
 
 #
 proxy:
   enabled: true
   mode: xforwarded
 
-# THESE VALUES ARE FOR TLS TERMINATION AT THE PROXY (NGINX), NOT THE POD ITSELF
-## NOTE: STRICT HOSTNAME SHOULD BE ENFORCED TO PREVENT SPOOFING
 
 extraEnv: |-
+  - name: KC_HTTPS_KEY_STORE_PASSWORD
+    value: "passwordpassword"
+  - name: KC_HTTPS_KEY_STORE_TYPE
+    value: "BCFKS"
+  - name: KC_FIPS_MODE
+    value: "strict"
   - name: KC_HOSTNAME
-    value: keycloak.example.com
+    value: "keycloak.example.com"
   - name: KC_CACHE_STACK
     value: "kubernetes"
   - name: KC_HOSTNAME_STRICT
-    value: "true"
+    value: "false"
   - name: KC_HOSTNAME_DEBUG
     value: "true"
   - name: KC_HTTP_ENABLED
@@ -180,7 +38,7 @@ extraEnv: |-
   - name: KC_BOOTSTRAP_ADMIN_USERNAME
     value: "admin"
   - name: KC_BOOTSTRAP_ADMIN_PASSWORD
-    value: "password"
+    value: "password1234567890!"
   - name: KEYCLOAK_PRODUCTION
     value: "true"
   - name: KC_HEALTH_ENABLED
@@ -188,21 +46,20 @@ extraEnv: |-
   - name: JAVA_OPTS_APPEND
     value: >-
       "-Djgroups.dns.query=keycloak-headless"
-      "-Dcom.redhat.fips=true"
   - name: KC_LOG_LEVEL
-    value: "org.keycloak.events:DEBUG,org.infinispan:INFO,org.jgroups:INFO"
+    value: "org.keycloak.events:INFO,org.infinispan:INFO,org.jgroups:INFO"
 
-#
 replicas: 1
 
 #
 image:
-  repository: registry1.dso.mil/ironbank/opensource/keycloak/keycloak
-  tag: "25.0.6"
-  pullPolicy: IfNotPresent
-#
-imagePullSecrets:
-- name: registry1-secret
+  repository: harbor.example.com/keycloak/keycloak-ubi-fips
+  tag: "26.0.7"
+  pullPolicy: Always
+
+imagePullSecrets: []
+#- name: secret
+
 #
 updateStrategy: RollingUpdate
 
@@ -341,6 +198,7 @@ ingress:
   servicePort: http
   # Ingress annotations
   annotations:
+    cert-manager.io/cluster-issuer: kc-lab-clusterissuer
     nginx.ingress.kubernetes.io/use-forwarded-headers: 'true'
     nginx.ingress.kubernetes.io/proxy-buffer-size: 128k
     nginx.ingress.kubernetes.io/ssl-redirect: 'true'
@@ -359,7 +217,7 @@ ingress:
 # Example TLS configuration
   tls:
     - hosts:
-        - '{{ .Release.Name }}.example.com'
+        - keycloak.example.com
       secretName: "kc-tls-cert"
 
   # ingress for console only (/auth/admin)
@@ -367,6 +225,7 @@ ingress:
     enabled: true
     ingressClassName: "nginx"
     annotations:
+      cert-manager.io/cluster-issuer: kc-lab-clusterissuer
       nginx.ingress.kubernetes.io/use-forwarded-headers: 'true'
       nginx.ingress.kubernetes.io/proxy-buffer-size: 128k
       nginx.ingress.kubernetes.io/ssl-redirect: 'true'
@@ -386,17 +245,3 @@ ingress:
      - hosts:
          - '{{ .Release.Name }}-console.example.com'
        secretName: "kc-console-tls-cert"
-EOF
-```
-
-## Install Keycloak
-```sh
-helm upgrade -i keycloak ./keycloak-2.5.1-bb.3.tgz --namespace keycloak -f keycloak-values.yaml
-```
-
-## Login To Keycloak
-**Navigate to keycloak.example.com/auth and use the login you created within the KC-ENV Vars**
-- user: admin
-- password: password123456790! (Please Change this!)
-
-![Initial Login](./pics/initial-login.png)
